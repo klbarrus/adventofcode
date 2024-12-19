@@ -122,22 +122,22 @@ void part1(const multimap<int, int> &pof, const multimap<int, int> &por,
       for (const auto &x : vl) {
         // lookup in pof, if present - error
         //      cout << format("{} ", x);
-        auto res = pof.equal_range(e);
-        for (auto i = res.first; i != res.second; ++i) {
-          if (i->second == x) {
-            correct = false;
-          }
+        auto rkey = pof.equal_range(e);
+        auto res = find_if(rkey.first, rkey.second,
+                           [x](const auto &pair) { return pair.second == x; });
+        if (res != rkey.second) {
+          correct = false;
         }
       }
       //    cout << format(" | ");
       for (const auto &x : vr) {
         // lookup in por, if present - error
         //      cout << format("{} ", x);
-        auto res = por.equal_range(e);
-        for (auto i = res.first; i != res.second; ++i) {
-          if (i->second == x) {
-            correct = false;
-          }
+        auto rkey = por.equal_range(e);
+        auto res = find_if(rkey.first, rkey.second,
+                           [x](const auto &pair) { return pair.second == x; });
+        if (res != rkey.second) {
+          correct = false;
         }
       }
       //      cout << "\n";
