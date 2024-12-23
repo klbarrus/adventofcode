@@ -19,8 +19,8 @@ void part2(const vector<int> &v1, const vector<int> &v2);
 int main(int argc, char *argv[]) {
   vector<string> args(argv + 1, argv + argc);
 
-  for (auto arg : args) {
-    cout << format("File {}\n", arg);
+  for (auto filename : args) {
+    cout << format("File {}\n", filename);
 
     vector<int> v1;
     vector<int> v2;
