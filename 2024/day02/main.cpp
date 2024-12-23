@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
   vector<string> args(argv + 1, argv + argc);
 
   for (auto filename : args) {
-    cout << format("File {}\n", arg);
+    cout << format("File {}\n", filename);
 
     vector<vector<int>> vov;
 
