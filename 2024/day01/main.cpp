@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     vector<int> v1;
     vector<int> v2;
 
-    readFile(arg, v1, v2);
+    readFile(filename, v1, v2);
     //        printData(v1, v2);
 
     sort(v1.begin(), v1.end());
