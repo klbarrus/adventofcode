@@ -18,6 +18,8 @@ void part1(const multimap<int, int> &pof, const multimap<int, int> &por,
            const vector<vector<int>> &pn, vector<vector<int>> &pne);
 void part2(const multimap<int, int> &pof, const multimap<int, int> &por,
            const vector<vector<int>> &pne);
+bool isValid(const multimap<int, int> &pof, const multimap<int, int> &por,
+             const vector<int> &v);
 
 int main(int argc, char *argv[]) {
   vector<string> args(argv + 1, argv + argc);
@@ -106,44 +108,44 @@ void printData(const multimap<int, int> &pof, const multimap<int, int> &por,
   }
 }
 
+bool isValid(const multimap<int, int> &pof, const multimap<int, int> &por,
+             const vector<int> &v) {
+  auto numl = 0;
+  auto numr = v.size() - 1;
+
+  for (const auto &e : v) {
+    auto vl = v | views::take(numl++);
+    auto vr = v | views::reverse | views::take(numr--) | views::reverse;
+
+    for (const auto &x : vl) {
+      // lookup in pof, if present - error
+      auto rkey = pof.equal_range(e);
+      auto res = find_if(rkey.first, rkey.second,
+                         [x](const auto &pair) { return pair.second == x; });
+      if (res != rkey.second) {
+        return false;
+      }
+    }
+
+    for (const auto &x : vr) {
+      // lookup in por, if present - error
+      auto rkey = por.equal_range(e);
+      auto res = find_if(rkey.first, rkey.second,
+                         [x](const auto &pair) { return pair.second == x; });
+      if (res != rkey.second) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 void part1(const multimap<int, int> &pof, const multimap<int, int> &por,
            const vector<vector<int>> &pn, vector<vector<int>> &pne) {
   size_t page_num = 0;
   for (const auto &v : pn) {
-    auto numl = 0;
-    auto numr = v.size() - 1;
-    // process this vector, checking against rules
-    bool correct = true;
-    for (const auto &e : v) {
-      auto vl = v | views::take(numl++);
-      auto vr = v | views::reverse | views::take(numr--) | views::reverse;
-
-      //      cout << format("Processing {}: ", e);
-      for (const auto &x : vl) {
-        // lookup in pof, if present - error
-        //      cout << format("{} ", x);
-        auto rkey = pof.equal_range(e);
-        auto res = find_if(rkey.first, rkey.second,
-                           [x](const auto &pair) { return pair.second == x; });
-        if (res != rkey.second) {
-          correct = false;
-        }
-      }
-      //    cout << format(" | ");
-      for (const auto &x : vr) {
-        // lookup in por, if present - error
-        //      cout << format("{} ", x);
-        auto rkey = por.equal_range(e);
-        auto res = find_if(rkey.first, rkey.second,
-                           [x](const auto &pair) { return pair.second == x; });
-        if (res != rkey.second) {
-          correct = false;
-        }
-      }
-      //      cout << "\n";
-    }
-
-    if (correct) {
+    if (isValid(pof, por, v)) {
       int mid = v.size() / 2;
       page_num += v[mid];
     } else {
