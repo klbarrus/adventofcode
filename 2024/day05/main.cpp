@@ -172,9 +172,9 @@ void part2(const multimap<int, int> &pof, const multimap<int, int> &por,
   size_t page_num = 0;
   for (auto &v : pne) {
     auto vc = v;
-    bool done = false;
+    bool done;
 
-    while (!done) {
+    do {
       // repeatedly swap pages until no more swaps done
       done = true;
 
@@ -190,7 +190,7 @@ void part2(const multimap<int, int> &pof, const multimap<int, int> &por,
           break;
         }
       }
-    }
+    } while (!done);
 
     // pages now in order
     int mid = vc.size() / 2;
