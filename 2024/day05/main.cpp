@@ -1,11 +1,13 @@
 // karlb
 // Advent of Code 2024, day 5
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <ranges>
 #include <sstream>
+#include <tuple>
 #include <vector>
 
 using namespace std;
@@ -20,6 +22,8 @@ void part2(const multimap<int, int> &pof, const multimap<int, int> &por,
            const vector<vector<int>> &pne);
 bool isValid(const multimap<int, int> &pof, const multimap<int, int> &por,
              const vector<int> &v);
+bool lookup(const multimap<int, int> &mm, const int key, const int item);
+void printVec(const vector<int> &v);
 
 int main(int argc, char *argv[]) {
   vector<string> args(argv + 1, argv + argc);
@@ -108,6 +112,20 @@ void printData(const multimap<int, int> &pof, const multimap<int, int> &por,
   }
 }
 
+bool lookup(const multimap<int, int> &mm, const int key, const int item) {
+  auto key_range = mm.equal_range(key);
+  auto res = find_if(key_range.first, key_range.second,
+                     [item](const auto &pair) { return pair.second == item; });
+
+  bool found = false;
+
+  if (res != key_range.second) {
+    found = true;
+  }
+
+  return found;
+}
+
 bool isValid(const multimap<int, int> &pof, const multimap<int, int> &por,
              const vector<int> &v) {
   auto numl = 0;
@@ -118,21 +136,13 @@ bool isValid(const multimap<int, int> &pof, const multimap<int, int> &por,
     auto vr = v | views::reverse | views::take(numr--) | views::reverse;
 
     for (const auto &x : vl) {
-      // lookup in pof, if present - error
-      auto rkey = pof.equal_range(e);
-      auto res = find_if(rkey.first, rkey.second,
-                         [x](const auto &pair) { return pair.second == x; });
-      if (res != rkey.second) {
+      if (lookup(pof, e, x)) {
         return false;
       }
     }
 
     for (const auto &x : vr) {
-      // lookup in por, if present - error
-      auto rkey = por.equal_range(e);
-      auto res = find_if(rkey.first, rkey.second,
-                         [x](const auto &pair) { return pair.second == x; });
-      if (res != rkey.second) {
+      if (lookup(por, e, x)) {
         return false;
       }
     }
@@ -158,5 +168,41 @@ void part1(const multimap<int, int> &pof, const multimap<int, int> &por,
 
 void part2(const multimap<int, int> &pof, const multimap<int, int> &por,
            const vector<vector<int>> &pne) {
-  cout << format("{} page numbers in error\n", pne.size());
+  // cout << format("{} page numbers in error\n", pne.size());
+  size_t page_num = 0;
+  for (auto &v : pne) {
+    auto vc = v;
+    bool done = false;
+
+    while (!done) {
+      // repeatedly swap pages until no more swaps done
+      done = true;
+
+      for (tuple t : vc | views::adjacent<2>) {
+        auto [t1, t2] = t;
+        //        cout << format("({},{}) ", t1, t2);
+        if (lookup(por, t1, t2)) {
+          //          cout << " swap "; // need to swap
+          auto i1 = find(vc.begin(), vc.end(), t1);
+          auto i2 = find(vc.begin(), vc.end(), t2);
+          iter_swap(i1, i2);
+          done = false;
+          break;
+        }
+      }
+    }
+
+    // pages now in order
+    int mid = vc.size() / 2;
+    page_num += vc[mid];
+  }
+
+  cout << format("Part 2: {}\n", page_num);
+}
+
+void printVec(const vector<int> &v) {
+  for (const auto &e : v) {
+    cout << format("{} ", e);
+  }
+  cout << "\n";
 }
