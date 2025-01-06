@@ -3,8 +3,11 @@
 
 #include <fstream>
 #include <iostream>
+#include <ranges>
+#include <span>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 using namespace std;
@@ -12,11 +15,13 @@ using namespace std;
 void readFile(const string &filename, vector<string> &puzz);
 void printData(const vector<string> &puzz);
 void part1(const vector<string> &puzz);
+void part2(const vector<string> &puzz);
 string getRow(size_t row, const vector<string> &puzz);
 string getCol(size_t col, const vector<string> &puzz);
 string getDiagUp(size_t diag, const vector<string> &puzz);
 string getDiagDown(size_t diag, const vector<string> &puzz);
 size_t search(const string &line);
+bool search3x3(string &a, string &b, string &c);
 
 int main(int argc, char *argv[]) {
   vector<string> args(argv + 1, argv + argc);
@@ -30,6 +35,7 @@ int main(int argc, char *argv[]) {
     // printData(puzz);
 
     part1(puzz);
+    part2(puzz);
   }
 
   return 0;
@@ -94,6 +100,36 @@ void part1(const vector<string> &puzz) {
   }
 
   cout << format("Part 1: {}\n", total);
+}
+
+void part2(const vector<string> &puzz) {
+  size_t numRows = puzz.size();
+  size_t total = 0;
+
+  // slide a 3x3 view over the puzzle
+
+  for (size_t i = 0; i < numRows - 2; ++i) {
+    auto window1 = puzz[i] | views::slide(3);
+    auto window2 = puzz[i + 1] | views::slide(3);
+    auto window3 = puzz[i + 2] | views::slide(3);
+
+    for (const auto &elem : views::zip(window1, window2, window3)) {
+      auto a = get<0>(elem) | ranges::to<string>();
+      auto b = get<1>(elem) | ranges::to<string>();
+      auto c = get<2>(elem) | ranges::to<string>();
+      //      cout << format("sliding view: \n");
+      //      cout << format("{}\n", a);
+      //      cout << format("{}\n", b);
+      //      cout << format("{}\n", c);
+      if (search3x3(a, b, c)) {
+        //        cout << "found x-mas\n";
+        total++;
+      }
+      //        cout << "\n";
+    }
+  }
+
+  cout << format("Part 2: {}\n", total);
 }
 
 string getRow(size_t row, const vector<string> &puzz) { return puzz[row]; }
@@ -186,4 +222,23 @@ size_t search(const string &line) {
   }
 
   return count;
+}
+
+bool search3x3(string &a, string &b, string &c) {
+  if (b[1] != 'A') {
+    return false;
+  }
+
+  string corners(4, ' ');
+  corners[0] = a[0];
+  corners[1] = a[2];
+  corners[2] = c[0];
+  corners[3] = c[2];
+
+  if (corners == "MMSS" || corners == "SMSM" || corners == "SSMM" ||
+      corners == "MSMS") {
+    return true;
+  }
+
+  return false;
 }
