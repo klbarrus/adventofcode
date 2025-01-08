@@ -1,5 +1,5 @@
 // karlb
-// Advent of Code 2024, day 6
+// Advent of Code 2017, day 2
 
 #include <algorithm>
 #include <fstream>
