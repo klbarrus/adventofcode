@@ -14,6 +14,7 @@ using namespace std;
 void readFile(const string &filename, vector<string> &puzz);
 void printData(const vector<string> &puzz);
 void part1(const vector<string> &puzz);
+void part2(const vector<string> &puzz);
 
 int main(int argc, char *argv[]) {
   vector<string> args(argv + 1, argv + argc);
@@ -27,6 +28,7 @@ int main(int argc, char *argv[]) {
     // printData(puzz);
 
     part1(puzz);
+    part2(puzz);
   }
 
   return 0;
@@ -59,7 +61,8 @@ void part1(const vector<string> &puzz) {
       line_data.push_back(word);
     }
 
-    // insert into set: if word already present (no insertion) - invalid
+    // insert into set
+    // if word already present (no insertion) - invalid
     bool valid = true;
     set<string> ss;
 
@@ -76,4 +79,37 @@ void part1(const vector<string> &puzz) {
   }
 
   cout << format("Part 1: {}\n", part1);
+}
+
+void part2(const vector<string> &puzz) {
+  size_t part2 = 0;
+
+  for (auto const &x : puzz) {
+    string word;
+    stringstream line_stream(x);
+    vector<string> line_data;
+
+    while (line_stream >> word) {
+      line_data.push_back(word);
+    }
+
+    // sort letters, insert into set
+    // if word already present (no insertion) - invalid
+    bool valid = true;
+    set<string> ss;
+
+    for (auto &w : line_data) {
+      sort(w.begin(), w.end());
+      auto res = ss.insert(w);
+      if (!res.second) {
+        valid = false;
+      }
+    }
+
+    if (valid) {
+      part2++;
+    }
+  }
+
+  cout << format("Part 2: {}\n", part2);
 }
