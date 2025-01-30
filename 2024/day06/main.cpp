@@ -1,12 +1,17 @@
 // karlb
 // Advent of Code 2024, day 6
 
+// TODO part 2 isn't correct
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <numeric>
+#include <ranges>
 #include <set>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -24,6 +29,8 @@ void printData(const set<pair<size_t, size_t>> &puzz,
                const pair<size_t, size_t> &start);
 void part1(const set<pair<size_t, size_t>> &puzz,
            const pair<size_t, size_t> &max, const pair<size_t, size_t> &start);
+void part2(const set<pair<size_t, size_t>> &puzz,
+           const pair<size_t, size_t> &max, const pair<size_t, size_t> &start);
 bool exit_maze(const pair<size_t, size_t> &max, const pair<size_t, size_t> &pos,
                Direction dir);
 Space check_next_space(const set<pair<size_t, size_t>> &puzz,
@@ -38,13 +45,14 @@ int main(int argc, char *argv[]) {
     cout << format("File {}\n", filename);
 
     set<pair<size_t, size_t>> puzz;
-    pair<size_t, size_t> max;
-    pair<size_t, size_t> start;
+    pair<size_t, size_t> max;   // max dimensions of
+    pair<size_t, size_t> start; // starting coords
 
     readFile(filename, puzz, max, start);
     // printData(puzz, max, start);
 
     part1(puzz, max, start);
+    part2(puzz, max, start);
   }
 
   return 0;
@@ -95,15 +103,17 @@ void part1(const set<pair<size_t, size_t>> &puzz,
   // cout << format("{} obstacles, starting at ({},{}\n", puzz.size(),
   //                get<0>(start), get<1>(start));
 
+  // track which spaces were visited
   set<pair<size_t, size_t>> visited;
 
-  bool done = false;
   auto dir = Direction::up;
   auto pos = start;
+
   visited.insert(pos);
-  while (not done) {
+
+  // exit loop when we exit the maze
+  while (true) {
     if (exit_maze(max, pos, dir)) {
-      done = true;
       break;
     }
 
@@ -120,11 +130,77 @@ void part1(const set<pair<size_t, size_t>> &puzz,
   cout << format("Part 1: {}\n", visited.size());
 }
 
+void part2(const set<pair<size_t, size_t>> &puzz,
+           const pair<size_t, size_t> &max, const pair<size_t, size_t> &start) {
+  // get grid dimensions
+  size_t max_row = get<0>(max);
+  size_t max_col = get<1>(max);
+
+  // record positions that create a loop/paradox
+  set<pair<size_t, size_t>> paradox;
+
+  // loop over grid
+  for (size_t row = 0; row < max_row; row++) {
+    for (size_t col = 0; col < max_col; col++) {
+      // add obstacle at (row,col)
+      auto puzz_copy = puzz;
+      auto res = puzz_copy.insert({row, col});
+      if (!res.second) {
+        // no insertion, so obstacle already present
+        // therefore we can skip this (row, col)
+        continue;
+      }
+
+      // track which positions are visited
+      // include direction - if tuple already exists in the set, we're in a loop
+      set<tuple<size_t, size_t, Direction>> visited;
+
+      bool loop = false;
+      auto dir = Direction::up;
+      auto pos = start;
+
+      visited.insert({get<0>(pos), get<1>(pos), dir});
+
+      while (true) {
+        if (exit_maze(max, pos, dir)) {
+          break;
+        }
+
+        Space space = check_next_space(puzz_copy, pos, dir);
+
+        if (space == Space::obstacle) {
+          rotate_direction(dir);
+        } else {
+          pos = move(pos, dir);
+        }
+        auto res = visited.insert({get<0>(pos), get<1>(pos), dir});
+        if (!res.second) {
+          // no insertion
+          // this <pos, dir> has already been visited
+          // this is a loop, so exit
+          loop = true;
+          break;
+        }
+      } // while simulating guard movement
+
+      //      cout << format("Part 2, ({},{}) - {}\n", row, col, loop);
+
+      if (loop) {
+        // cout << format("Part 2, ({},{})\n", row, col);
+        //  path loops, add (row,col) to paradox set
+        paradox.insert({row, col});
+      }
+    } // col
+  } // row
+
+  cout << format("Part 2: {}\n", paradox.size());
+}
+
 // given the current position and maze dimensions
 // the next step in the direction indicated would exit the maze
 bool exit_maze(const pair<size_t, size_t> &max, const pair<size_t, size_t> &pos,
                Direction dir) {
-//  cout << format("exit_maze\n");
+  //  cout << format("exit_maze\n");
 
   bool exit = false;
 
@@ -166,7 +242,7 @@ bool exit_maze(const pair<size_t, size_t> &max, const pair<size_t, size_t> &pos,
 // check if the next step in the direction indicated hits an obstacle
 Space check_next_space(const set<pair<size_t, size_t>> &puzz,
                        const pair<size_t, size_t> &pos, Direction dir) {
-//  cout << format("check_next_space\n");
+  //  cout << format("check_next_space\n");
   Space rv = Space::empty;
   size_t row = get<0>(pos);
   size_t col = get<1>(pos);
@@ -197,7 +273,7 @@ Space check_next_space(const set<pair<size_t, size_t>> &puzz,
 }
 
 void rotate_direction(Direction &dir) {
-//  cout << format("rotate_direction\n");
+  //  cout << format("rotate_direction\n");
   switch (dir) {
   case Direction::up:
     dir = Direction::right;
@@ -221,7 +297,7 @@ pair<size_t, size_t> move(const pair<size_t, size_t> &pos, Direction dir) {
   size_t row = get<0>(pos);
   size_t col = get<1>(pos);
 
-  //cout << format("move ({},{}) to ", row, col);
+  // cout << format("move ({},{}) to ", row, col);
   switch (dir) {
   case Direction::up:
     --row;
@@ -239,7 +315,7 @@ pair<size_t, size_t> move(const pair<size_t, size_t> &pos, Direction dir) {
     cout << format("move() direction {}?\n", to_underlying(dir));
     break;
   }
-  //cout << format("({},{})\n", row, col);
+  // cout << format("({},{})\n", row, col);
 
   return {row, col};
 }
